@@ -1,0 +1,49 @@
+pipeline {
+
+  environment {
+    dockerimagename = "lvtujingji/adp-dev"
+    dockerImage = ""
+  }
+
+  agent any
+
+  stages {
+
+    stage('Checkout Source') {
+      steps {
+        git url: 'https://github.com/lvtujingji/lvtujingji.git', branch: 'main', credentialsId: 'f0992b07-b8e1-4e41-b096-30fb69820fa3'
+      }
+    }
+
+    stage('Build image') {
+      steps{
+        script {
+          dockerImage = docker.build dockerimagename
+        }
+      }
+    }
+
+    stage('Pushing Image') {
+      environment {
+               registryCredential = 'c79e8c73-ff13-4c6d-8a9d-7dbff52a7209'
+           }
+      steps{
+        script {
+          docker.withRegistry( 'https://registry.hub.docker.com', registryCredential ) {
+            dockerImage.push("latest")
+          }
+        }
+      }
+    }
+
+    stage('Deploying React.js container to Kubernetes') {
+      steps {
+        script {
+          kubernetesDeploy(configs: "apd-dev.yaml")
+        }
+      }
+    }
+
+  }
+
+}
