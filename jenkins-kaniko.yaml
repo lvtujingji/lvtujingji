@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kaniko
+  namespace: devops-tools
+spec:
+  serviceAccountName: jenkins-admin
+  containers:
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:debug
+      env:
+      - name: AWS_SDK_LOAD_CONFIG
+        value: "true"
+      command:
+        - sleep
+      args:
+        - 99d
+      volumeMounts:
+      - name: ecrconfig
+        mountPath: /kaniko/.docker/
+  restartPolicy: Never
+  volumes:
+  - name: ecrconfig
+    configMap:
+      name: ecrconfig
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ecrconfig
+  namespace: devops-tools
+data: 
+  config.json: |
+    { "credsStore": "ecr-login"}
+                
