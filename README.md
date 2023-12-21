@@ -1,4 +1,4 @@
-- í ½í±‹ Hi, Iâ€™m lvtujingji
-- í ½í±€ Iâ€™m interested in python
-- í ¼í¼± Iâ€™m currently learning kubernetes
-- í ½í³« my email lvtujingji@163.com
+Hi, Iâ€™m lvtujingji
+Iâ€™m interested in python
+Iâ€™m currently learning kubernetes
+my email lvtujingji@163.com
