@@ -18,7 +18,7 @@ spec:
             runAsUser: 1000
       containers:
         - name: nginx
-          image: adp-ecr-dev:latest 547384405015.dkr.ecr.us-east-1.amazonaws.com/adp-ecr-dev:nginx-v1.14
+          image: 547384405015.dkr.ecr.us-east-1.amazonaws.com/adp-ecr-dev:nginx-v1.14
           resources:
             limits:
               memory: "2Gi"
