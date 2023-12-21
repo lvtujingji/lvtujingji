@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adp-nginx-dev
+  namespace: adp-prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adp-nginx-dev
+  template:
+    metadata:
+      labels:
+        app: adp-nginx-dev
+    spec:
+      securityContext:
+            fsGroup: 1000
+            runAsUser: 1000
+      containers:
+        - name: nginx
+          image: adp-ecr-dev:latest 547384405015.dkr.ecr.us-east-1.amazonaws.com/adp-ecr-dev:nginx-v1.14
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+            requests:
+              memory: "500Mi"
+              cpu: "500m"
+          ports:
+            - name: http
+              containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: "/"
+              port: 80
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: "/"
+              port: 80
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
