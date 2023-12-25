@@ -13,9 +13,6 @@ spec:
       labels:
         app: adp-nginx-prod
     spec:
-      securityContext:
-            fsGroup: 1000
-            runAsUser: 1000
       containers:
         - name: nginx
           image: 547384405015.dkr.ecr.us-east-1.amazonaws.com/adp-ecr-dev:nginx-v1.14
