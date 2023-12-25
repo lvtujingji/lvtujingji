@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubesphere-ingress
+  namespace: kubesphere-system 
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 600m
+    nginx.org/client-max-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "1800"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "1800"
+    nginx.ingress.kubernetes.io/websocket-services: proxy-public
+    nginx.org/websocket-services: proxy-public
+spec:
+  rules:
+  - host: ks.lvtujingji.click
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ks-console
+            port:
+              number: 80
+  ingressClassName: nginx
