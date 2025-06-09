@@ -1,0 +1,76 @@
+pipeline{
+	agent{
+		kubernetes{
+			cloud 'adp-k8s-dev'
+			yaml '''
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kaniko
+  namespace: devops-tools
+spec:
+  serviceAccountName: jenkins-admin
+  containers:
+    - name: kaniko
+      image: gcr.io/kaniko-project/executor:debug
+      env:
+      - name: AWS_SDK_LOAD_CONFIG
+        value: "true"
+      command:
+        - sleep
+      args:
+        - 99d
+      volumeMounts:
+      - name: ecrconfig
+        mountPath: /kaniko/.docker/
+  restartPolicy: Never
+  volumes:
+  - name: ecrconfig
+    configMap:
+      name: ecrconfig
+'''
+		}
+	}
+	parameters{
+		string( name:'ENVIRONMENT',defaultValue:'dev',description:'Target environment (dev, test, prod)')
+		string(	name:'VERSION',defaultValue:'1.10',description:'Target Verison to deply')
+	}
+	stages('Begging Deply'){
+		stage('Pull Code'){
+			steps {
+                // 使用 checkout 步骤拉取代码
+                checkout([$class: 'GitSCM', 
+                          branches: [[name: 'main']], 
+                          doGenerateSubmoduleConfigurations: false, 
+                          extensions: [], 
+                          submoduleCfg: [], 
+                          userRemoteConfigs: [[credentialsId: 'adp-git-pass-dev', url: 'https://github.com/lvtujingji/lvtujingji.git']]])
+                sh 'sed -i -E "/server_name/s/web/${ENVIRONMENT}/" lvtujingji.conf'
+			}			
+		}
+		stage('Build Image'){
+			steps{
+				container('kaniko'){
+                 sh "/kaniko/executor --context git://github.com/lvtujingji/lvtujingji.git#refs/heads/main --dockerfile dockerfile --destination 547384405015.dkr.ecr.us-east-1.amazonaws.com/adp-ecr-dev:nginx-v${params.VERSION}"
+				}
+			}
+		}
+		stage('Deploy !!!'){
+			steps{
+				script{
+					sh 'curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.18.9/2020-11-02/bin/linux/amd64/kubectl && chmod +x kubectl'
+					if (params.ENVIRONMENT == 'prod') {
+						sh 'sed -i -E "/image/s/nginx-v[0-9]?\\.[0-9]+/nginx-v${VERSION}/g" nginx-prod.yaml'
+                        sh "./kubectl apply -f nginx-prod.yaml"
+                    } else if (params.ENVIRONMENT  == 'test') {
+						sh 'sed -i -E "/image/s/nginx-v[0-9]?\\.[0-9]+/nginx-v${VERSION}/g" nginx-test.yaml'
+                        sh "./kubectl apply -f nginx-test.yaml"
+                    } else {
+						sh 'sed -i -E "/image/s/nginx-v[0-9]?\\.[0-9]+/nginx-v${VERSION}/g" nginx-dev.yaml'
+                        sh "./kubectl apply -f nginx-dev.yaml"
+                    }
+				}
+			}
+		}
+	}
+}
